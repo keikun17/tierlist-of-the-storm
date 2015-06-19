@@ -10,7 +10,6 @@
   height: 172px;
 
   h1.header-text {
-    @include span-columns(12);
     font-size: 64px;
     font-family: "Advent Pro", sans-serif;
     color: rgb(255, 255, 255);
