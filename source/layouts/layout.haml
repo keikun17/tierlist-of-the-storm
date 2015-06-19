@@ -7,6 +7,12 @@
     / Use title if it's in the page YAML frontmatter
     %title= current_page.data.title || "Page Title"
     = stylesheet_link_tag "normalize", "all"
+    = partial 'fonts.html'
     = javascript_include_tag  "all"
-  %body{:class => page_classes}
-    = yield
+  %body
+    .header
+      %h1.header-text TIER LIST OF THE STORM
+    .content
+      = yield
+    .footer
+      @keikun17
