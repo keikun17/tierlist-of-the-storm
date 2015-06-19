@@ -1,0 +1,20 @@
+.header {
+  // @include outer-container;
+
+  background-image: -moz-linear-gradient( -96deg, rgb(17,11,26) 0%, rgb(113,90,163) 160%);
+  background-image: -webkit-linear-gradient( -96deg, rgb(17,11,26) 0%, rgb(113,90,163) 160%);
+  background-image: -ms-linear-gradient( -96deg, rgb(17,11,26) 0%, rgb(113,90,163) 160%);
+  // position: absolute;
+  // left: 0px;
+  // top: -9px;
+  height: 172px;
+
+  h1.header-text {
+    @include span-columns(12);
+    font-size: 64px;
+    font-family: "Advent Pro", sans-serif;
+    color: rgb(255, 255, 255);
+    padding: 45px 0px 0 30px;
+  }
+}
+
