@@ -64,9 +64,6 @@ activate :autoprefixer do
   # config.ignore   = ['hacks.css']
 end
 
-# Burbon neat active so `middleman-build` can recognize the mixins.
-activate :neat
-
 # Build-specific configuration
 configure :build do
   # For example, change the Compass output style for deployment
@@ -77,8 +74,6 @@ configure :build do
 
   # Enable cache buster
   # activate :asset_hash
-
-  activate :neat
 
   # Use relative URLs
   activate :relative_assets
