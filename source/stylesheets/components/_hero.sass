@@ -1,0 +1,23 @@
+hero
+  display: block
+  margin-bottom: 5px
+  margin-top: 5px
+  padding-left: 20px
+  // @include outer-container
+  // @include fill-parent
+
+  &.specialist
+    color: $specialist
+  &.assassin
+    color: $assassin
+  &.tank
+    color: $tank
+  &.support
+    color: $support
+
+  span.hero-name
+    font-size: 16px
+    font-family: "Source Sans Pro"
+    display: inline-block
+    @include span-columns(2 of 6)
+
