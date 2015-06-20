@@ -9,9 +9,9 @@ var TierListApp = React.createClass({
       {
         level: '1',
         heroes: [
-          { name: 'Sylvanas', spec: 'specialist',  skill_order: '3 1 3 3 4 1 2' },
-          { name: 'Uther', spec: 'support', skill_order: '3 1 3 3 4 1 2' },
-          { name: 'Kael', spec: 'assassin', skill_order: '3 1 3 3 4 1 2' }
+          { name: 'Sylvanas', spec: 'specialist',  skill_order: ['3', '1', '3', '3' ,'3', '4', '1'] },
+          { name: 'Uther', spec: 'support', skill_order: ['3', '1', '3', '3' ,'3', '4', '1'] },
+          { name: 'Kael', spec: 'assassin', skill_order: ['3', '1', '3', '3' ,'3', '4', '1'] }
         ]
       },
     ];
