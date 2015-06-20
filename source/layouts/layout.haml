@@ -8,7 +8,6 @@
     %title= current_page.data.title || "Page Title"
     = stylesheet_link_tag "normalize", "all"
     = partial 'fonts.html'
-    = javascript_include_tag  "all"
   %body
     .header
       %h1.header-text TIER LIST OF THE STORM
@@ -16,3 +15,4 @@
       = yield
     .footer
       @keikun17
+  = javascript_include_tag  "all"
