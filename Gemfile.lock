@@ -85,6 +85,10 @@ GEM
       em-websocket (~> 0.5.1)
       middleman-core (~> 3.2)
       rack-livereload (~> 0.3.15)
+    middleman-react (0.13.3)
+      execjs
+      middleman-core (>= 3.0)
+      react-source (~> 0.13.3)
     middleman-sprockets (3.4.2)
       middleman-core (>= 3.3)
       sprockets (~> 2.12.1)
@@ -110,6 +114,7 @@ GEM
     rb-fsevent (0.9.5)
     rb-inotify (0.9.5)
       ffi (>= 0.5.0)
+    react-source (0.13.3)
     sass (3.4.14)
     sprockets (2.12.3)
       hike (~> 1.2)
@@ -142,6 +147,7 @@ DEPENDENCIES
   middleman-autoprefixer
   middleman-gh-pages
   middleman-livereload (~> 3.3.0)
+  middleman-react
   neat
   tzinfo-data
   wdm (~> 0.1.0)
