@@ -1,6 +1,7 @@
 //= require react/react-with-addons
 //= require react-router
 //= require appconfig
+//= require_tree ./components
 
 var TierListApp = React.createClass({
   fetch_data: function() {
@@ -27,9 +28,9 @@ var TierListApp = React.createClass({
     })
 
     return (
-      <div className='main'>
+      <tier_list>
         {tier_list}
-      </div>
+      </tier_list>
     );
   }
 });
