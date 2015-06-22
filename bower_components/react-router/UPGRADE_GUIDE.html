@@ -1,0 +1,809 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible'>
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Page Title</title>
+    <link href="../../stylesheets/normalize.css" rel="stylesheet" type="text/css" /><link href="../../stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Advent+Pro' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <div class='header'>
+      <h1 class='header-text'>TIER LIST OF THE STORM</h1>
+    </div>
+    <div class='content'>
+      <h1 id="upgrade-guide">Upgrade Guide</h1>
+      
+      <p>To see discussion around these API changes, please refer to the
+      <a href="/CHANGELOG.md">changelog</a> and visit the commits and issues they
+      reference.</p>
+      
+      <h2 id="x---013x">0.12.x -&gt; 0.13.x</h2>
+      
+      <p>React introduced the ability to use ES6 classes for component
+      definitions, which has the side-effect of mixins not being "the thing"
+      anymore. Our mixins like <code>State</code> and <code>Navigation</code> just proxied calls to
+      some methods on an undocumented feature of React called <code>context</code>, that
+      in turn called methods on the router instance under the hood.</p>
+      
+      <p>Without mixins we needed a way for you to get access to these methods.
+      We decided the simplest solution was to stop hiding the router instance
+      and just put the whole thing on context.</p>
+      
+      <p>You can think about context as values that are floating around a render
+      tree that parent components (<code>Handler</code> in the <code>Router.run</code> callback) can
+      explicitly define and descendent components can explicitly ask for. The
+      stuff on context doesn't show up in a component unless you ask for it.</p>
+      
+      <p><strong>Note:</strong> You can still use our mixins, you'll just get a deprecation warning.</p>
+      
+      <p>```js
+      // 0.12.x
+      var Foo = React.createClass({
+        mixins: [ Router.State ],
+        render: function () {
+          var id = this.getParams().id;
+          var searchTerm = this.getQuery().searchTerm;
+          // etc. …
+        }
+      });</p>
+      
+      <p>// 0.13.x w/o ES6 fanciness
+      var Foo = React.createClass({
+        contextTypes: {
+          router: React.PropTypes.func
+        },</p>
+      
+      <p>render: function () {
+          var router = this.context.router;
+          var id = router.getCurrentParams().id;
+          var searchTerm = router.getCurrentQuery().searchTerm;
+          // etc.
+        }
+      });</p>
+      
+      <p>// 0.13.x w/ ES6 fanciness
+      class Foo extends React.Component {
+        render () {
+          var { router } = this.context;
+          var id = router.getCurrentParams().id;
+          var searchTerm = router.getCurrentQuery().searchTerm;
+          // etc.
+        }
+      }</p>
+      
+      <p>Foo.contextTypes = {
+        router: React.PropTypes.func
+      };
+      ```</p>
+      
+      <p>Most of the time we prefer to just pass the state down the props tree
+      and not mess with context:</p>
+      
+      <p>```js
+      Router.run(routes, (Handler, state) =&gt; {
+        React.render(&lt;Handler {…state}/&gt;, document.body);
+      });</p>
+      
+      <p>// and then when rendering route handlers, keep passing it down
+      &lt;RouteHandler {…this.props}/&gt;</p>
+      
+      <p>// and then in your methods you have what you need on props
+      var id = this.props.params.id;
+      var searchTerm = this.props.query.searchTerm;
+      ```</p>
+      
+      <h2 id="x---0120">0.11.x -&gt; 0.12.0</h2>
+      
+      <p><code>transition.wait</code> was removed, you now use a callback instead:</p>
+      
+      <p>```js
+      // 0.11.x
+      var SomeHandler = React.createClass({
+        statics: {
+          willTransitionTo (transition) {
+            transition.wait(somePromise());
+          }
+        }
+      });</p>
+      
+      <p>// 0.12.0
+      var SomeHandler = React.createClass({
+        statics: {
+          willTransitionTo (transition, params, query, callback) {
+            somePromise().then(callback);
+          }
+        }
+      });
+      ```</p>
+      
+      <h2 id="x---011x">0.10.x -&gt; 0.11.x</h2>
+      
+      <p>The router changed <strong>a lot</strong> in this release. While you won't have to
+      change too much of your app, you will have to change it in a lot of
+      places. The fundamental change is that you, rather than the router, get
+      to have control of your view instances.</p>
+      
+      <p>If you find anything is missing from this list, please open an issue and
+      we will get it added here ASAP.</p>
+      
+      <h3 id="react-012">React 0.12</h3>
+      
+      <p>You must upgrade to <code>0.12.x</code> before you can use version <code>0.11.x</code> of the
+      router.</p>
+      
+      <h3 id="routes-and-starting-the-router"><code>&lt;Routes/&gt;</code> and starting the router</h3>
+      
+      <p><code>&lt;Routes/&gt;</code> is gone, there is a new API that gives you complete control
+      of your views.</p>
+      
+      <p>```js
+      // 0.10.x
+      var routes = (</p>
+      <routes location="history">
+          &lt;Route handler={App}&gt;
+            &lt;Route name="dashboard" handler={Dashboard}/&gt;
+          
+        </routes>
+      <p>);</p>
+      
+      <p>React.render(routes, el);</p>
+      
+      <p>// 0.11.x
+      var routes = (
+        &lt;Route handler={App}&gt;
+          &lt;Route name="dashboard" handler={Dashboard}/&gt;
+        &lt;/Route&gt;
+      );</p>
+      
+      <p>Router.run(routes, Router.HistoryLocation, function (Handler) {
+        React.render(<handler></handler>, el);
+      });</p>
+      
+      <p>// or default to hash location
+      Router.run(routes, function (Handler) {
+        React.render(<handler></handler>, el);
+      });
+      ```</p>
+      
+      <h3 id="thispropsactiveroutehandler---routehandler"><code>this.props.activeRouteHandler()</code> -&gt; <code>&lt;RouteHandler/&gt;</code></h3>
+      
+      <p>```js
+      // 0.10.x
+      var Something = React.createClass({
+        render: function () {
+          return (
+            &lt;div&gt;
+              <this.props.activeroutehandler></this.props.activeroutehandler>
+            &lt;/div&gt;
+          );
+        }
+      });</p>
+      
+      <p>// 0.11.x
+      var RouteHandler = Router.RouteHandler;</p>
+      
+      <p>var Something = React.createClass({
+        render: function () {
+          return (
+            &lt;div&gt;
+              <routehandler></routehandler>
+            &lt;/div&gt;
+          );
+        }
+      });
+      ```</p>
+      
+      <h3 id="thispropsparams-and-thispropsquery"><code>this.props.params</code> and <code>this.props.query</code></h3>
+      
+      <p>They are no longer available on props, use the <code>State</code> mixin.</p>
+      
+      <p>```js
+      // 0.10.x
+      var Something = React.createClass({
+        render: function () {
+          var name = this.props.params.name;
+          var something = this.props.query.something;
+          // …
+        }
+      });</p>
+      
+      <p>// 0.11.x</p>
+      
+      <p>// pass it down the view hierarchy to get the same lifecycle hooks to
+      // trigger as before
+      Router.run(routes, function (Handler, state) {
+        React.render(&lt;Handler params={state.params} query={state.query} /&gt;, el);
+        // make sure to <code>&lt;RouteHandler {...this.props}/&gt;</code> to continue
+        // passing it down the hierarchy
+      });</p>
+      
+      <p>// or use the <code>State</code> mixin
+      var Something = React.createClass({
+        mixins: [ Router.State ],
+        render: function () {
+          var name = this.getParams().name;
+          var something = this.getQuery().something;
+          // …
+        }
+      });</p>
+      
+      <p>// Also, if you're using a flux-style app, you can trigger a "transition"
+      // action in the <code>run</code> callback with the params/query in the payload, then
+      // subscribe in your handlers to the store that grabs the data.
+      ```</p>
+      
+      <h3 id="activestate---state-and-methods-too"><code>ActiveState</code> -&gt; <code>State</code>, and methods too</h3>
+      
+      <p>This mixin's name has changed, and all of its methods that had the word
+      <code>active</code> in it, too. For example, <code>getActiveParams()</code> becomes <code>getParams()</code>.</p>
+      
+      <p>```js
+      // v0.10.x
+      var Something = React.createClass({
+        mixins: [ Router.ActiveState ],
+        render: function () {
+          var name = this.getActiveParams().name;
+          // …
+        }
+      });</p>
+      
+      <p>// v0.11.x
+      var Something = React.createClass({
+        mixins: [ Router.State ]
+        render: function () {
+          var name = this.getParams().name;
+          // …
+        }
+      });
+      ```</p>
+      
+      <h3 id="currentpath---state"><code>CurrentPath</code> -&gt; <code>State</code></h3>
+      
+      <p>You can find <code>this.getPath()</code> on the <code>Router.State</code> mixin.</p>
+      
+      <p>```js
+      // v0.10.x
+      var Something = React.createClass({
+        mixins: [ Router.CurrentPath ],
+        render: function () {
+          var path = this.getCurrentPath();
+          // …
+        }
+      });</p>
+      
+      <p>// v0.11.x
+      var Something = React.createClass({
+        mixins: [ Router.State ],
+        render: function () {
+          var path = this.getPath();
+          // …
+        }
+      });
+      ```</p>
+      
+      <h3 id="route-addhandlerkey-prop">Route <code>addHandlerKey</code> prop</h3>
+      
+      <p>This option has been removed, you will need to add handler keys
+      yourself:</p>
+      
+      <p>```js
+      // 0.10.x
+      &lt;Route handler={App}&gt;
+        &lt;Route addHandlerKey={true}/&gt;
+      &lt;/Route&gt;</p>
+      
+      <p>// 0.11.x
+      var App = React.createClass({
+        mixins: [ Router.State ],</p>
+      
+      <p>getHandlerKey: function () {
+          // this will all depend on your needs, but here's a typical
+          // scenario that's pretty much what the old prop did
+          var childDepth = 1; // have to know your depth
+          var childName = this.getRoutes()[childDepth].name;
+          var id = this.getParams().id;
+          var key = childName+id;
+          return key;
+        },</p>
+      
+      <p>render: function () {
+          return (
+            &lt;div&gt;
+              &lt;RouteHandler key={this.getHandlerKey()} /&gt;
+            &lt;/div&gt;
+          );
+        }
+      });
+      ```</p>
+      
+      <h3 id="routes-onerrorfn"><code>&lt;Routes onError={fn}/&gt;</code></h3>
+      
+      <p><code>&lt;Routes/&gt;</code> is gone, instead create a router with your error handler as
+      an option:</p>
+      
+      <p>```js
+      // 0.10.x
+      &lt;Routes onError={fn}&gt;
+        // …
+      &lt;/Routes&gt;</p>
+      
+      <p>// 0.11.x
+      var router = Router.create({
+        onError: fn,
+        // …
+      });
+      router.run(callback);
+      ```</p>
+      
+      <h3 id="routerrenderroutesto"><code>Router.renderRoutesTo*</code></h3>
+      
+      <p>These methods have been removed because you, not the router, are in
+      control of rendering.</p>
+      
+      <p>```js
+      // v0.10.x
+      Router.renderRoutesToString(routes, path, function (html) {
+       // do something with <code>html</code>
+      });</p>
+      
+      <p>// v0.11.x
+      Router.run(routes, path, function (Handler) {
+        var html = React.renderToString(<handler></handler>);
+      });
+      ```</p>
+      
+      <h3 id="route-props-passed-to-handlers">Route Props Passed to Handlers</h3>
+      
+      <p>In <code>0.10.x</code> you could add props to your route that would make their way
+      down to your handlers. While convenient, conflating routes with their
+      handlers was confusing to a lot of folks.</p>
+      
+      <p>To get the same effect, you can either create your handlers with a
+      function and close over the information you need, or simply define those
+      properties on your handlers.</p>
+      
+      <p>```js
+      // 0.10.x
+      &lt;Route name="users" foo="bar" handler={Something}/&gt;</p>
+      
+      <p>var Something = React.createClass({
+        render () {
+          return &lt;div&gt;{this.props.name} {this.props.foo}&lt;/div&gt;
+        }
+      });</p>
+      
+      <p>// 0.11.x</p>
+      
+      <p>// close over technique
+      &lt;Route name="users" handler={makeSomething("users", "bar")}/&gt;</p>
+      
+      <p>function makeSomething(name, foo) {
+        return React.createClass({
+          render () {
+            return &lt;div&gt;{name} {foo}&lt;/div&gt;
+          }
+        });
+      }</p>
+      
+      <p>// handler definition technique
+      &lt;Route name="users" handler={Something}/&gt;</p>
+      
+      <p>var Something = React.createClass({
+        foo: "bar",
+        name: "users",
+        render () {
+          return &lt;div&gt;{this.name} {this.foo}&lt;/div&gt;
+        }
+      });
+      ```</p>
+      
+      <h2 id="x---010x">0.9.x -&gt; 0.10.x</h2>
+      
+      <p>Nothing changed, this was simply React <code>0.12.0</code> compatibility. Note,
+      your code needs to use the React <code>0.11.x</code> API for things to work, there
+      will be lots of warnings in the console.</p>
+      
+      <h2 id="x---09x">0.7.x -&gt; 0.9.x</h2>
+      
+      <h3 id="activestate-mixin-isactive"><code>ActiveState</code> mixin <code>isActive</code></h3>
+      
+      <p><code>isActive</code> is now an instance method.</p>
+      
+      <p>```js
+      // 0.7.x
+      var SomethingActive = React.createClass({
+        mixins: [ActiveState],</p>
+      
+      <p>render: function () {
+          var isActive = SomethingActive.isActive(…);
+        }
+      });</p>
+      
+      <p>// 0.9.x
+      var SomethingActive = React.createClass({
+        mixins: [ActiveState],</p>
+      
+      <p>render: function () {
+          var isActive = this.isActive(…);
+        }
+      });
+      ```</p>
+      
+      <h3 id="routes-onactivestatechange---routes-onchange-"><code>&lt;Routes onActiveStateChange/&gt;</code> -&gt; <code>&lt;Routes onChange /&gt;</code></h3>
+      
+      <p>```js
+      // 0.7.x
+      &lt;Routes onActiveStateChange={fn} /&gt;</p>
+      
+      <p>function fn(nextState) {}</p>
+      
+      <p>// 0.9.x
+      &lt;Routes onChange={fn} /&gt;</p>
+      
+      <p>function fn() {
+        // no arguments
+        // <code>this</code> is the routes instance
+        // here are some useful methods to get at the data you probably need
+        this.getCurrentPath();
+        this.getActiveRoutes();
+        this.getActiveParams();
+        this.getActiveQuery();
+      }
+      ```</p>
+      
+      <h3 id="in-params-support"><code>.</code> in params support</h3>
+      
+      <p><code>.</code> used to be a delimiter like <code>/</code>, but now its a valid character in
+      your params.</p>
+      
+      <h3 id="transitionretry"><code>transition.retry()</code></h3>
+      
+      <p><code>transition.retry()</code> used to use <code>transitionTo</code>, creating a new history
+      entry, it now uses <code>replaceWith</code>.</p>
+      
+      <p>```js
+      // 0.7.x
+      React.createClass({
+        login: function () {
+          // …
+          transition.retry();
+        }
+      });</p>
+      
+      <p>// 0.9.x
+      React.createClass({
+        mixins: [Navigation],
+        login: function () {
+          // …
+          this.transitionTo(transition.path);
+        }
+      });
+      ```</p>
+      
+      <h3 id="returning-promises-from-transition-hooks">Returning promises from transition hooks</h3>
+      
+      <p>Transition hooks are now sync, unless you opt-in to async with
+      <code>transition.wait(promise)</code>.</p>
+      
+      <p>```js
+      // 0.7.x
+      React.createClass({
+        statics: {
+          willTransitionTo: function (transition) {
+            return somePromise();
+          }
+        }
+      });</p>
+      
+      <p>// 0.9.x
+      React.createClass({
+        statics: {
+          willTransitionTo: function (transition) {
+            transition.wait(somePromise());
+          }
+        }
+      });
+      ```</p>
+      
+      <h3 id="preservescrollposition---scrollbehavior"><code>preserveScrollPosition</code> -&gt; <code>scrollBehavior</code></h3>
+      
+      <p><code>preserveScrollPosition</code> was totally broken and should have been named
+      <code>perverseScrollPosition</code>.</p>
+      
+      <p>There are now three scroll behaviors you can use:</p>
+      
+      <ul>
+        <li><code>'browser'</code></li>
+        <li><code>'scrollToTop'</code></li>
+        <li><code>'none'</code></li>
+      </ul>
+      
+      <p><code>browser</code> is the default, and imitates what browsers do in a typical
+      page reload scenario (preserves scroll positions when using the back
+      button, scrolls up when you come to a new page, etc.) Also, you can no
+      longer specify scroll behavior per <code>&lt;Route/&gt;</code> anymore, only <code>&lt;Routes/&gt;</code></p>
+      
+      <p>```</p>
+      <routes scrollbehavior="scrollToTop" />
+      
+      <p>```</p>
+      
+      <h3 id="routestore">RouteStore</h3>
+      
+      <p>This was not a public module, but we know some people were using it.
+      It's gone now. We have made getting at the current routes incredibly
+      convenient now with additions to the <code>ActiveState</code> mixin.</p>
+      
+      <h3 id="routertransitionto-replacewith-goback"><code>Router.transitionTo, replaceWith, goBack</code></h3>
+      
+      <p>These methods have been moved to mixins.</p>
+      
+      <p>```js
+      var Router = require('react-router');</p>
+      
+      <p>// 0.7.x
+      React.createClass({
+        whenever: function () {
+          Router.transitionTo('something');
+          Router.replaceWith('something');
+          Router.goBack();
+        }
+      });</p>
+      
+      <p>// 0.9.x
+      var Navigation = Router.Navigation;</p>
+      
+      <p>React.createClass({
+        mixins: [Navigation],
+        whenever: function () {
+          this.transitionTo('something');
+          this.replaceWith('something');
+          this.goBack();
+        }
+      });
+      ```</p>
+      
+      <h3 id="routes-ontransitionerror-onabortedtransition"><code>&lt;Routes onTransitionError onAbortedTransition/&gt;</code></h3>
+      
+      <p>These were removed, there is no upgrade path in <code>0.9.0</code> but we will have
+      something soon. These weren't intended to be used.</p>
+      
+      <h3 id="activestate-lifecycle-method-updateactivestate-removed"><code>ActiveState</code> lifecycle method <code>updateActiveState</code> removed</h3>
+      
+      <p>We didn't actually need this. Just use <code>this.isActive(to, params,
+      query)</code>.</p>
+      
+      <h3 id="asyncstate-mixin-removed"><code>AsyncState</code> mixin removed</h3>
+      
+      <p>There is no upgrade path. Just use <code>comoponentDidMount</code> to request
+      state. This was some groundwork for server-side rendering but we are
+      going a different direction now (using props passed in to route
+      handlers) so we've removed it.</p>
+      
+      <h2 id="x---08x">0.7.x -&gt; 0.8.x</h2>
+      
+      <p>Please don't upgrade to <code>0.8.0</code>, just skip to <code>0.9.x</code>.</p>
+      
+      <p><code>0.8.0</code> had some transient mixins we didn't intend to document, but had
+      some miscommunication :( If you were one of three people who used some
+      of these mixins and need help upgrading from <code>0.8.0 -&gt; 0.9.x</code> find us on
+      freenode in <code>#rackt</code> or open a ticket. Thanks!</p>
+      
+      <h2 id="x---07x">0.6.x -&gt; 0.7.x</h2>
+      
+      <p>The package root modules were removed. Please import modules from the
+      <code>Router</code> default export.</p>
+      
+      <p>```js
+      // 0.6.x
+      var Link = require('react-router/Link');</p>
+      
+      <p>// 0.7.x
+      var Router = require('react-router');
+      var Link = Router.Link;
+      ```</p>
+      
+      <h2 id="x---06x">0.5.x -&gt; 0.6.x</h2>
+      
+      <h3 id="path-matching">Path Matching</h3>
+      
+      <p>Paths that start with <code>/</code> are absolute and work exactly as they used to.
+      Paths that don't start with <code>/</code> are now relative, meaning they extend
+      their parent route.</p>
+      
+      <p>Simply add <code>/</code> in front of all your paths to keep things working.</p>
+      
+      <p>```xml
+      <!-- 0.5.x --></p>
+      <route path="/foo">
+        <route path="bar" />
+      </route>
+      
+      <!-- 0.6.x -->
+      <route path="/foo">
+        <route path="/bar" />
+      </route>
+      <p>```</p>
+      
+      <p>Though, you may want to embrace this new feature:</p>
+      
+      <p>```xml
+      <!-- 0.5.x --></p>
+      <route path="/course/:courseId">
+        <route path="/course/:courseId/assignments" />
+        <route path="/course/:courseId/announcements" />
+      </route>
+      
+      <!-- 0.6.x -->
+      <route path="/course/:courseId">
+        <route path="assignments" />
+        <route path="announcements" />
+      </route>
+      <p>```</p>
+      
+      <p>Also <code>.</code> is no longer matched in dynamic segments.</p>
+      
+      <p>```xml
+      <!-- 0.5.x --></p>
+      <route path="/file/:filename" />
+      
+      <!-- 0.6.x -->
+      <route path="/file/:filename.?:ext?" />
+      
+      <!--
+        or for a looser match to allow for multiple `.` note that the data
+        will be available on `this.props.params.splat` instead of
+        `this.props.params.filename`
+      -->
+      <route path="/file/*" />
+      
+      <p>```</p>
+      
+      <h3 id="link-params">Link params</h3>
+      
+      <p>Links should now pass their params in the <code>params</code> property, though the
+      old behavior will still work, you should update your code soon because
+      it will be removed by <code>v1.0</code></p>
+      
+      <p>```js
+      // 0.5.x</p>
+      <link to="user" userid="123" />
+      
+      <p>// 0.6.x
+      &lt;Link to="user" params={{userId: "123"}}/&gt;
+      ```</p>
+      
+      <h3 id="dynamic-segments-keys-and-lifecycle-methods">Dynamic Segments, keys, and lifecycle methods</h3>
+      
+      <p>If you have dynamic segments and are depending on <code>getInitialState</code>,
+      <code>componentWillMount</code>, or <code>componentDidMount</code> to fire between transitions
+      to the same route–like <code>users/123</code> and <code>users/456</code>–then you have two
+      options:</p>
+      
+      <ul>
+        <li>add <code>addHandlerKey={true}</code> to your route and keep the previous
+      behavior (but lose out on performance), or</li>
+        <li>implement <code>componentWillReceiveProps</code>.</li>
+      </ul>
+      
+      <p>```js
+      // 0.5.x
+      &lt;Route handler={User} path="/user/:userId"/&gt;</p>
+      
+      <p>// 0.6.x
+      &lt;Route handler={User} path="/user/:userId" addHandlerKey={true} /&gt;</p>
+      
+      <p>// 0.5.x
+      var User = React.createClass({
+        getInitialState: function () {
+          return {
+            user: getUser(this.props.params.userId);
+          }
+        }
+      });</p>
+      
+      <p>// 0.6.x
+      var User = React.createClass({
+        getInitialState: function () {
+          return this.getState();
+        },</p>
+      
+      <p>componentWillReceiveProps: function (newProps) {
+          this.setState(this.getState(newProps));
+        },</p>
+      
+      <p>getState: function (props) {
+          props = props || this.props;
+          return {
+            user: getUser(props.params.userId)
+          };
+        }
+      });
+      ```</p>
+      
+      <h2 id="x---05x">0.4.x -&gt; 0.5.x</h2>
+      
+      <p>We brought back <code>&lt;Routes/&gt;</code>.</p>
+      
+      <p>```js
+      // 0.4.x
+      var routes = (
+        &lt;Route handler={App} location="history"&gt;
+          <route name="about" handler="about"></route>
+        &lt;/Route&gt;
+      );</p>
+      
+      <p>// 0.5.x
+      var routes = (</p>
+      <routes location="history">
+          &lt;Route handler={App}&gt;
+            <route name="about" handler="about" />
+          
+        </routes>
+      <p>);
+      ```</p>
+      
+      <h2 id="x---04x">0.3.x -&gt; 0.4.x</h2>
+      
+      <p>NPM users should point their apps to <code>react-router</code> instead of
+      <code>react-nested-router</code>. Make sure to <code>npm prune</code>!</p>
+      
+      <h2 id="x---03x">0.2.x -&gt; 0.3.x</h2>
+      
+      <ul>
+        <li>React <code>0.11.x</code> is now required.</li>
+        <li><code>this.props.activeRoute</code> became <code>this.props.activeRouteHandler()</code></li>
+      </ul>
+      
+      <p>```js
+      // 0.2.x</p>
+      
+      <p>var App = React.createClass({
+        render: function () {
+          return (
+            &lt;div&gt;
+              {this.props.activeRoute}
+            &lt;/div&gt;
+          );
+        }
+      });</p>
+      
+      <p>// 0.3.x
+      var App = React.createClass({
+        render: function () {
+          // now you can send extra props to the active route handler
+          // and use the new jsx syntax
+          // &lt;this.props.activeRouteHandler extraProp={something}/&gt;
+          return (
+            &lt;div&gt;
+              {this.props.activeRouteHandler()}
+            &lt;/div&gt;
+          );
+        }
+      });
+      ```</p>
+      
+      <h2 id="x---02x">0.1.x -&gt; 0.2.x</h2>
+      
+      <p>The <code>Router</code> function was removed.</p>
+      
+      <p>```js
+      // 0.1.x
+      var router = Router(routes);
+      router.renderComponent(element);</p>
+      
+      <p>// 0.2.x
+      React.renderComponent(routes, element);
+      ```</p>
+    </div>
+    <div class='footer'>
+      @keikun17
+    </div>
+  </body>
+  <script src="../../javascripts/all.js" type="text/javascript"></script>
+</html>

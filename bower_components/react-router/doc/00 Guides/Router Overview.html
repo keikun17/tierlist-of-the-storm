@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible'>
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Page Title</title>
+    <link href="../../../../stylesheets/normalize.css" rel="stylesheet" type="text/css" /><link href="../../../../stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Advent+Pro' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <div class='header'>
+      <h1 class='header-text'>TIER LIST OF THE STORM</h1>
+    </div>
+    <div class='content'>
+      <p>To illustrate the problems React Router is going to solve for you, let’s build a
+      small application without it.</p>
+      
+      <h2 id="without-react-router">Without React Router</h2>
+      
+      <p>```js
+      var About = React.createClass({
+        render: function () {
+          return &lt;h2&gt;About&lt;/h2&gt;;
+        }
+      });</p>
+      
+      <p>var Inbox = React.createClass({
+        render: function () {
+          return &lt;h2&gt;Inbox&lt;/h2&gt;;
+        }
+      });</p>
+      
+      <p>var Home = React.createClass({
+        render: function () {
+          return &lt;h2&gt;Home&lt;/h2&gt;;
+        }
+      });</p>
+      
+      <p>var App = React.createClass({
+        render () {
+          var Child;
+          switch (this.props.route) {
+            case 'about': Child = About; break;
+            case 'inbox': Child = Inbox; break;
+            default:      Child = Home;
+          }</p>
+      
+      <pre><code>return (
+        &lt;div&gt;
+          &lt;h1&gt;App&lt;/h1&gt;
+          &lt;Child/&gt;
+        &lt;/div&gt;
+      )   } });
+      </code></pre>
+      
+      <p>function render () {
+        var route = window.location.hash.substr(1);
+        React.render(&lt;App route={route} /&gt;, document.body);
+      }</p>
+      
+      <p>window.addEventListener('hashchange', render);
+      render(); // render initially
+      ```</p>
+      
+      <p>As the hash portion of the URL changes, <code>App</code> will render a different
+      <code>&lt;Child/&gt;</code> by branching on <code>this.props.route</code>. Pretty straightforward
+      stuff. But it gets complicated fast.</p>
+      
+      <p>Imagine now that <code>Inbox</code> has some nested UI at a path like
+      <code>inbox/messages/:id</code> and <code>inbox/unread</code>, etc. We'll need to make our url
+      parsing much more intelligent to be able to pass the right information
+      to <code>App</code>, and then to <code>Inbox</code> in order for it to know which URL-mapped
+      child component it should render. We'd then have a branch of components
+      that should be rendered at any given URL. Add a few more of these
+      branches and we'll end up with a lot of code to keep the URL and our
+      application's component hierarchy in sync.</p>
+      
+      <h2 id="with-react-router">With React Router</h2>
+      
+      <p>Nested URLs and nested component hierarchy are at the heart of React
+      Router. Lets make our routing for our little app declarative. We use JSX
+      for route configuration because we want to define a view hierarchy with
+      properties, so its a pefect fit.</p>
+      
+      <p>```js
+      var Router = require('react-router');
+      var Route = Router.Route;</p>
+      
+      <p>// declare our routes and their hierarchy
+      var routes = (
+        &lt;Route handler={App}&gt;
+          &lt;Route path="about" handler={About}/&gt;
+          &lt;Route path="inbox" handler={Inbox}/&gt;
+        &lt;/Route&gt;
+      );
+      ```</p>
+      
+      <p>Next we need to delete some code from <code>App</code>. We'll replace <code>&lt;Child/&gt;</code>
+      with <code>&lt;RouteHandler/&gt;</code> that functions as the old <code>switch</code> block from
+      before.</p>
+      
+      <p>```js
+      var RouteHandler = Router.RouteHandler;</p>
+      
+      <p>var App = React.createClass({
+        render () {
+          return (
+            &lt;div&gt;
+              &lt;h1&gt;App&lt;/h1&gt;
+              <routehandler></routehandler>
+            &lt;/div&gt;
+          )
+        }
+      });
+      ```</p>
+      
+      <p>Finally we need to listen to the url and render the application.</p>
+      
+      <p><code>js
+      Router.run(routes, Router.HashLocation, (Root) =&gt; {
+        React.render(&lt;Root/&gt;, document.body);
+      });
+      </code></p>
+      
+      <p><code>Root</code> is a component that bakes in the matched component hierarchy
+      making <code>RouteHandler</code> know what to render.</p>
+      
+      <p>Note that <code>&lt;Route/&gt;</code> components are not ever rendered, they are just
+      configuration objects that the router uses to create an internal tree of
+      routes.</p>
+      
+      <h2 id="adding-more-ui">Adding more UI</h2>
+      
+      <p>Alright, now we're ready to nest the inbox messages inside the inbox UI.
+      First we'll make a new <code>Message</code> component and then we'll add the route
+      under <code>inbox</code> so that the UI will nest.</p>
+      
+      <p>```js
+      var Message = React.createClass({
+        render () {
+          return &lt;h3&gt;Message&lt;/h3&gt;;
+        }
+      });</p>
+      
+      <p>var routes = (
+        &lt;Route handler={App}&gt;
+          &lt;Route path="about" handler={About}/&gt;
+          &lt;Route path="inbox" handler={Inbox}&gt;
+            &lt;Route path="messages/:id" handler={Message}/&gt;
+          &lt;/Route&gt;
+        &lt;/Route&gt;
+      );
+      ```</p>
+      
+      <p>Now visits to urls like <code>inbox/messages/Jkei3c32</code> will match the new
+      route and nest the UI branch of <code>App -&gt; Inbox -&gt; Message</code>.</p>
+      
+      <h2 id="getting-the-url-parameters">Getting the url parameters</h2>
+      
+      <p>We're going to need to know something about the message in order to
+      fetch it from the server. We call the component you hand to a <code>&lt;Route/&gt;</code>
+      a <code>RouteHandler</code>. <code>RouteHandler</code> instances get some useful properties
+      injected into them when you render, particularly the parameters from the
+      dynamic segment of your path. In our case, <code>:id</code>.</p>
+      
+      <p><code>js
+      var Message = React.createClass({
+        componentDidMount: function () {
+          // from the path `/inbox/messages/:id`
+          var id = this.props.params.id;
+          fetchMessage(id, function (err, message) {
+            this.setState({ message: message });
+          })
+        },
+        // ...
+      });
+      </code></p>
+      
+      <h2 id="nested-ui-and-nested-urls-need-not-be-coupled">Nested UI and Nested URLs need not be coupled</h2>
+      
+      <p>With React Router, you don't need to nest your UI in order to get a
+      nested URL. Inversely, to get nested UI, you don't need to have nested
+      URLs either.</p>
+      
+      <p>Lets make a new url at <code>/about/company</code>, but without nesting the UI
+      inside of the <code>About</code> component.</p>
+      
+      <p><code>js
+      var routes = (
+        &lt;Route handler={App}&gt;
+          &lt;Route path="about" handler={About}/&gt;
+          &lt;Route path="about/company" handler={Company}/&gt;
+        &lt;/Route&gt;
+      );
+      </code></p>
+      
+      <p>Though our url is nested, the UI of <code>About</code> and <code>Company</code> are siblings.</p>
+      
+      <p>Now lets go the other way and add the url <code>/archive/messages/:id</code> and
+      have it nested under our inbox UI even though the URL is not nested. We
+      have to do three things for this to work:</p>
+      
+      <ol>
+        <li>Start the path with <code>/</code> to signal that its an absolute path. This
+      won’t “inherit” the parent path the way <code>inbox/messages/:id</code> gets
+      inherited.</li>
+        <li>Nest the <code>&lt;Route/&gt;</code> under the <code>inbox</code> route to cause the UI to nest.</li>
+        <li>Ensure you have all the necessary dynamic segments, we only have
+      <code>:id</code> so its pretty easy.</li>
+      </ol>
+      
+      <p><code>js
+      var routes = (
+        &lt;Route handler={App}&gt;
+          &lt;Route path="inbox" handler={Inbox}&gt;
+            &lt;Route path="messages/:id" handler={Message}/&gt;
+            &lt;Route path="/archive/messages/:id" handler={Message}/&gt;
+          &lt;/Route&gt;
+        &lt;/Route&gt;
+      );
+      </code></p>
+      
+      <p>That's the gist of React Router. Application UIs are boxes inside of
+      boxes inside of boxes; now you can keep those boxes in sync with the
+      URL.</p>
+    </div>
+    <div class='footer'>
+      @keikun17
+    </div>
+  </body>
+  <script src="../../../../javascripts/all.js" type="text/javascript"></script>
+</html>

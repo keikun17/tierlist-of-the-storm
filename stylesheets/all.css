@@ -353,6 +353,17 @@ table {
   border-collapse: collapse;
   border-spacing: 0; }
 
+/* line 1, /Users/Valerian/Projects/hots-tierlist/source/stylesheets/components/_app.sass */
+app {
+  padding-left: 10px;
+  float: left;
+  display: block;
+  margin-right: 4.82916%;
+  width: 30.11389%; }
+  /* line 89, /Users/Valerian/.rbenv/versions/2.1.5/lib/ruby/gems/2.1.0/gems/neat-1.7.2/app/assets/stylesheets/grid/_span-columns.scss */
+  app:last-child {
+    margin-right: 0; }
+
 /* line 1, /Users/Valerian/Projects/hots-tierlist/source/stylesheets/components/_body.sass */
 body {
   display: -webkit-box;
@@ -450,7 +461,8 @@ skill_order {
     list-style: none;
     display: inline-block;
     font-size: 16px;
-    font-family: "Source Sans Pro"; }
+    font-family: "Source Sans Pro";
+    margin: 0 0 0 5px; }
 
 /* line 2, /Users/Valerian/Projects/hots-tierlist/source/stylesheets/components/_tier.sass */
 tier span.tier-rank {

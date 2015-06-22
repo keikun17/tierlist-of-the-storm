@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible'>
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Page Title</title>
+    <link href="../../../../stylesheets/normalize.css" rel="stylesheet" type="text/css" /><link href="../../../../stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Advent+Pro' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <div class='header'>
+      <h1 class='header-text'>TIER LIST OF THE STORM</h1>
+    </div>
+    <div class='content'>
+      <p>A user-defined component given to a <code>Route</code> as the <code>handler</code> prop. The
+      router will inject properties into your component when its rendered
+      by <code>RouteHandler</code>, it also calls some lifecycle static hooks during
+      transitions.</p>
+      
+      <h2 id="injected-props">Injected Props</h2>
+      
+      <h3 id="params"><code>params</code></h3>
+      
+      <p>The dynamic segments of the url.</p>
+      
+      <h3 id="query"><code>query</code></h3>
+      
+      <p>The query parameters of the url.</p>
+      
+      <h3 id="path"><code>path</code></h3>
+      
+      <p>The full application url path.</p>
+      
+      <h3 id="example">Example</h3>
+      
+      <p>```js
+      // given a route like this:
+      &lt;Route path="/course/:courseId/students" handler={Students}/&gt;</p>
+      
+      <p>// and a url like this:
+      "/course/123/students?sort=name"</p>
+      
+      <p>var Students = React.createClass({
+        render () {
+          this.props.params.courseId; // "123"
+          this.props.query.sort; // "name"
+          this.props.path; // "/course/123/students?sort=name"
+          // …
+        }
+      });
+      ```</p>
+      
+      <h2 id="static-lifecycle-methods">Static Lifecycle Methods</h2>
+      
+      <p>You can define some static methods on your route handlers that will be
+      called during route transitions.</p>
+      
+      <h3 id="willtransitiontotransition-params-query-callback"><code>willTransitionTo(transition, params, query, callback)</code></h3>
+      
+      <p>Called when a handler is about to render, giving you the opportunity to
+      abort or redirect the transition. You can pause the transition while you
+      do some asynchonous work and call <code>callback(error)</code> when you're done, or
+      omit the callback in your argument list and it will be called for you.</p>
+      
+      <p>See also: <a href="#TODO">Transition</a></p>
+      
+      <h3 id="willtransitionfromtransition-component-callback"><code>willTransitionFrom(transition, component, callback)</code></h3>
+      
+      <p>Called when an active route is being transitioned out giving you an
+      opportunity to abort the transition. The <code>component</code> is the current
+      component, you'll probably need it to check its state to decide if you
+      want to allow the transition (like form fields).</p>
+      
+      <p>See also: <a href="#TODO">Transition</a></p>
+      
+      <h3 id="note-about-callback-argument">Note about <code>callback</code> argument</h3>
+      
+      <p>If you add <code>callback</code> to your arguments list, you must call it
+      eventually, even if you redirect the transition.</p>
+      
+      <h3 id="example-1">Example</h3>
+      
+      <p>```js
+      var Settings = React.createClass({
+        statics: {
+          willTransitionTo: function (transition, params, query, callback) {
+            auth.isLoggedIn((isLoggedIn) =&gt; {
+              transition.abort();
+              callback();
+            });
+          },</p>
+      
+      <pre><code>willTransitionFrom: function (transition, component) {
+        if (component.formHasUnsavedData()) {
+          if (!confirm('You have unsaved information,'+
+                       'are you sure you want to leave this page?')) {
+            transition.abort();
+          }
+        }
+      }   }
+      </code></pre>
+      
+      <p>//…
+      });
+      ```</p>
+    </div>
+    <div class='footer'>
+      @keikun17
+    </div>
+  </body>
+  <script src="../../../../javascripts/all.js" type="text/javascript"></script>
+</html>
